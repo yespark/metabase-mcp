@@ -1,164 +1,217 @@
-[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/imlewc-metabase-server-badge.png)](https://mseep.ai/app/imlewc-metabase-server)
+# metabase-mcp-mbql
 
-# metabase-server MCP Server
-
-[![smithery badge](https://smithery.ai/badge/@imlewc/metabase-server)](https://smithery.ai/server/@imlewc/metabase-server)
-
-A Model Context Protocol server for Metabase integration.
-
-This is a TypeScript-based MCP server that implements integration with Metabase API. It allows AI assistants to interact with Metabase, providing access to:
-
-- Dashboards, questions/cards, and databases as resources
-- Tools for listing and executing Metabase queries
-- Ability to view and interact with Metabase data
-
-## Features
-
-### Resources
-- List and access Metabase resources via `metabase://` URIs
-- Access dashboards, cards/questions, and databases
-- JSON content type for structured data access
-
-### Tools
-- `list_dashboards` - List all dashboards in Metabase
-- `list_cards` - List all questions/cards in Metabase
-- `list_databases` - List all databases in Metabase
-- `execute_card` - Execute a Metabase question/card and get results
-- `get_dashboard_cards` - Get all cards in a dashboard
-- `execute_query` - Execute a SQL query against a Metabase database
-
-## Configuration
-
-Before running the server, you need to set environment variables for authentication. The server supports two methods:
-
-1.  **API Key (Preferred):**
-    *   `METABASE_URL`: The URL of your Metabase instance (e.g., `https://your-metabase-instance.com`).
-    *   `METABASE_API_KEY`: Your Metabase API key.
-
-2.  **Username/Password (Fallback):**
-    *   `METABASE_URL`: The URL of your Metabase instance.
-    *   `METABASE_USERNAME`: Your Metabase username.
-    *   `METABASE_PASSWORD`: Your Metabase password.
-
-The server will first check for `METABASE_API_KEY`. If it's set, API key authentication will be used. If `METABASE_API_KEY` is not set, the server will fall back to using `METABASE_USERNAME` and `METABASE_PASSWORD`. You must provide credentials for at least one of these methods.
-
-**Example setup:**
-
-Using API Key:
-```bash
-# Required environment variables
-export METABASE_URL=https://your-metabase-instance.com
-export METABASE_API_KEY=your_metabase_api_key
-```
-
-Or, using Username/Password:
-```bash
-# Required environment variables
-export METABASE_URL=https://your-metabase-instance.com
-export METABASE_USERNAME=your_username
-export METABASE_PASSWORD=your_password
-```
-You can set these environment variables in your shell profile or use a `.env` file with a package like `dotenv`.
-
-## Development
-
-Install dependencies:
-```bash
-npm install
-```
-
-Build the server:
-```bash
-npm run build
-```
-
-For development with auto-rebuild:
-```bash
-npm run watch
-```
+Serveur MCP (Model Context Protocol) pour l'intégration avec Metabase, avec support complet de MBQL pour l'édition visuelle des requêtes.
 
 ## Installation
+
 ```bash
-# Oneliner, suitable for CI environment
-git clone https://github.com/imlewc/metabase-server.git && cd metabase-server && npm i && npm run build && npm link
+npm install metabase-mcp-mbql
 ```
 
-To use with Claude Desktop, add the server config:
+## Configuration MCP
 
-On MacOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-On Windows: `%APPDATA%/Claude/claude_desktop_config.json`
+Ajoutez cette configuration à votre client MCP (Claude Desktop, etc.) :
 
 ```json
 {
   "mcpServers": {
-    "metabase-server": {
-      "command": "metabase-server",
+    "metabase": {
+      "command": "npx",
+      "args": ["metabase-mcp-mbql"],
       "env": {
-        "METABASE_URL": "https://your-metabase-instance.com",
-        // Use API Key (preferred)
-        "METABASE_API_KEY": "your_metabase_api_key"
-        // Or Username/Password (if API Key is not set)
-        // "METABASE_USERNAME": "your_username",
-        // "METABASE_PASSWORD": "your_password"
+        "METABASE_URL": "https://metabase.example.com",
+        "METABASE_API_KEY": "mb_votre_cle_api"
       }
     }
   }
 }
 ```
 
-Note: You can also set these environment variables in your system instead of in the config file if you prefer.
+### Authentification
 
-### Installing via Smithery
+Deux méthodes sont supportées :
 
-To install metabase-server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@imlewc/metabase-server):
-
-```bash
-npx -y @smithery/cli install @imlewc/metabase-server --client claude
+**1. Clé API (recommandé) :**
+```json
+{
+  "METABASE_URL": "https://metabase.example.com",
+  "METABASE_API_KEY": "mb_votre_cle_api"
+}
 ```
 
-### Debugging
+**2. Identifiants utilisateur :**
+```json
+{
+  "METABASE_URL": "https://metabase.example.com",
+  "METABASE_USERNAME": "votre_email",
+  "METABASE_PASSWORD": "votre_mot_de_passe"
+}
+```
 
-Since MCP servers communicate over stdio, debugging can be challenging. We recommend using the [MCP Inspector](https://github.com/modelcontextprotocol/inspector), which is available as a package script:
+---
+
+## Outils disponibles
+
+### Dashboards
+
+| Outil | Description |
+|-------|-------------|
+| `list_dashboards` | Liste tous les dashboards |
+| `get_dashboard` | Récupère les détails complets d'un dashboard (cartes, paramètres) |
+| `create_dashboard` | Crée un nouveau dashboard |
+| `update_dashboard` | Met à jour un dashboard existant |
+| `delete_dashboard` | Archive ou supprime un dashboard |
+| `get_dashboard_cards` | Liste toutes les cartes d'un dashboard |
+| `add_card_to_dashboard` | Ajoute une carte à un dashboard |
+| `remove_card_from_dashboard` | Retire une carte d'un dashboard |
+| `update_dashboard_cards` | Met à jour les cartes avec leurs mappings de paramètres |
+| `add_dashboard_filter` | Ajoute ou met à jour un filtre sur un dashboard |
+
+### Cards (Questions)
+
+| Outil | Description |
+|-------|-------------|
+| `list_cards` | Liste toutes les questions/cartes (filtres: `archived`, `table`, `database`, `using_model`, `bookmarked`, `using_segment`, `all`, `mine`) |
+| `get_card` | Récupère une carte avec sa configuration complète (dataset_query, template-tags) |
+| `create_card` | Crée une nouvelle question |
+| `update_card` | Met à jour une question existante |
+| `delete_card` | Archive ou supprime une question |
+| `execute_card` | Exécute une question et retourne les résultats |
+
+### Requêtes MBQL
+
+| Outil | Description |
+|-------|-------------|
+| `create_card_mbql` | Crée une question en MBQL (éditable dans le query builder visuel) |
+| `execute_mbql_query` | Exécute une requête MBQL sans créer de carte |
+
+### Requêtes SQL
+
+| Outil | Description |
+|-------|-------------|
+| `execute_query` | Exécute une requête SQL native sur une base de données |
+
+### Bases de données
+
+| Outil | Description |
+|-------|-------------|
+| `list_databases` | Liste toutes les bases de données |
+| `get_database_metadata` | Récupère les métadonnées complètes (tables, champs, IDs) |
+| `get_table_metadata` | Récupère les métadonnées détaillées d'une table |
+
+### Collections
+
+| Outil | Description |
+|-------|-------------|
+| `list_collections` | Liste toutes les collections |
+| `create_collection` | Crée une nouvelle collection |
+| `update_collection` | Met à jour une collection |
+
+### Utilisateurs
+
+| Outil | Description |
+|-------|-------------|
+| `list_users` | Liste tous les utilisateurs |
+| `get_user` | Récupère les détails d'un utilisateur |
+| `create_user` | Crée un nouvel utilisateur |
+| `update_user` | Met à jour un utilisateur |
+| `disable_user` | Désactive un utilisateur |
+
+### Permissions
+
+| Outil | Description |
+|-------|-------------|
+| `list_permission_groups` | Liste les groupes de permissions |
+| `create_permission_group` | Crée un groupe de permissions |
+| `delete_permission_group` | Supprime un groupe de permissions |
+| `get_collection_permissions` | Récupère le graphe des permissions par collection |
+| `update_collection_permissions` | Met à jour les permissions d'un groupe sur une collection |
+| `add_user_to_group` | Ajoute un utilisateur à un groupe |
+| `remove_user_from_group` | Retire un utilisateur d'un groupe |
+
+---
+
+## Exemples d'utilisation
+
+### Créer une question MBQL
+
+```json
+{
+  "name": "Ventes par mois",
+  "database_id": 1,
+  "query": {
+    "source-table": 123,
+    "aggregation": [["sum", ["field", 456, null]]],
+    "breakout": [["field", 789, {"temporal-unit": "month"}]]
+  },
+  "display": "line"
+}
+```
+
+### Configurer un filtre avec template-tag
+
+```json
+{
+  "card_id": 42,
+  "dataset_query": {
+    "type": "native",
+    "database": 1,
+    "native": {
+      "query": "SELECT * FROM orders WHERE status = {{status}}",
+      "template-tags": {
+        "status": {
+          "id": "abc-123",
+          "name": "status",
+          "display-name": "Statut",
+          "type": "dimension",
+          "dimension": ["field", 456, null],
+          "widget-type": "category"
+        }
+      }
+    }
+  }
+}
+```
+
+### Connecter un filtre dashboard à une carte
+
+```json
+{
+  "dashboard_id": 10,
+  "cards": [{
+    "id": 100,
+    "card_id": 42,
+    "row": 0,
+    "col": 0,
+    "size_x": 6,
+    "size_y": 4,
+    "parameter_mappings": [{
+      "parameter_id": "filter-1",
+      "card_id": 42,
+      "target": ["variable", ["template-tag", "status"]]
+    }]
+  }]
+}
+```
+
+---
+
+## Développement
 
 ```bash
+# Installation des dépendances
+npm install
+
+# Build
+npm run build
+
+# Watch mode
+npm run watch
+
+# Inspector MCP (debug)
 npm run inspector
 ```
 
-The Inspector will provide a URL to access debugging tools in your browser.
+## Licence
 
-## Testing
-
-After configuring the environment variables as described in the "Configuration" section, you can manually test the server's authentication. The MCP Inspector (`npm run inspector`) is a useful tool for sending requests to the server.
-
-### 1. Testing with API Key Authentication
-
-1.  Set the `METABASE_URL` and `METABASE_API_KEY` environment variables with your Metabase instance URL and a valid API key.
-2.  Ensure `METABASE_USERNAME` and `METABASE_PASSWORD` are unset or leave them, as the API key should take precedence.
-3.  Start the server: `npm run build && node build/index.js` (or use your chosen method for running the server, like via Claude Desktop config).
-4.  Check the server logs. You should see a message indicating that it's using API key authentication (e.g., "Using Metabase API Key for authentication.").
-5.  Using an MCP client or the MCP Inspector, try calling a tool, for example, `tools/call` with `{"name": "list_dashboards"}`.
-6.  Verify that the tool call is successful and you receive the expected data.
-
-### 2. Testing with Username/Password Authentication (Fallback)
-
-1.  Ensure the `METABASE_API_KEY` environment variable is unset.
-2.  Set `METABASE_URL`, `METABASE_USERNAME`, and `METABASE_PASSWORD` with valid credentials for your Metabase instance.
-3.  Start the server.
-4.  Check the server logs. You should see a message indicating that it's using username/password authentication (e.g., "Using Metabase username/password for authentication." followed by "Authenticating with Metabase using username/password...").
-5.  Using an MCP client or the MCP Inspector, try calling the `list_dashboards` tool.
-6.  Verify that the tool call is successful.
-
-### 3. Testing Authentication Failures
-
-*   **Invalid API Key:**
-    1.  Set `METABASE_URL` and an invalid `METABASE_API_KEY`. Ensure `METABASE_USERNAME` and `METABASE_PASSWORD` variables are unset.
-    2.  Start the server.
-    3.  Attempt to call a tool (e.g., `list_dashboards`). The tool call should fail, and the server logs might indicate an authentication error from Metabase (e.g., "Metabase API error: Invalid X-API-Key").
-*   **Invalid Username/Password:**
-    1.  Ensure `METABASE_API_KEY` is unset. Set `METABASE_URL` and invalid `METABASE_USERNAME`/`METABASE_PASSWORD`.
-    2.  Start the server.
-    3.  Attempt to call a tool. The tool call should fail due to failed session authentication. The server logs might show "Authentication failed" or "Failed to authenticate with Metabase".
-*   **Missing Credentials:**
-    1.  Unset `METABASE_API_KEY`, `METABASE_USERNAME`, and `METABASE_PASSWORD`. Set only `METABASE_URL`.
-    2.  Attempt to start the server.
-    3.  The server should fail to start and log an error message stating that authentication credentials (either API key or username/password) are required (e.g., "Either (METABASE_URL and METABASE_API_KEY) or (METABASE_URL, METABASE_USERNAME, and METABASE_PASSWORD) environment variables are required").
+MIT

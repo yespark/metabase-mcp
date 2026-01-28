@@ -1,5 +1,5 @@
 {
-  "name": "@yespark/metabase-mcp",
+  "name": "metabase-mcp-mbql",
   "version": "1.0.0",
   "description": "Metabase MCP server with MBQL support for visual query editing",
   "private": false,
